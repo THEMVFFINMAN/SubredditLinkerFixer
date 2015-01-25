@@ -1,7 +1,7 @@
 import praw, random, re, sqlite3, time
 
 USERNAME  = "SubredditLinkFixer"
-PASSWORD  = "Wouldn'tyouliketoknow"
+PASSWORD  = "IT'S STILL A SECRET"
 USERAGENT = "The SubredditLinkFixer by /u/blendt"
 SUBREDDIT = "all"
 MAXPOSTS = 1000000
@@ -9,7 +9,7 @@ WAIT = 60
 
 WAITS = str(WAIT)
 
-sql = sqlite3.connect('sql6.db')
+sql = sqlite3.connect('sql7.db')
 print('Loaded SQL Database')
 cur = sql.cursor()
 
@@ -48,7 +48,7 @@ def scanSub():
             regged2 = re.search('((^|\s)(u|U)\/[a-zA-Z]*($|\s))', post.body.lower())
             
             if regged2:
-                    if ("".join(regged2.group(1).lower().split()))[2:] > 2:
+                    if len(("".join(regged2.group(1).lower().split()))[2:]) > 2:
                         
                         post.reply("If you use both slashes like so: /" + "".join(regged2.group(1).split()) + " then Reddit will automatically linkify the user's profile for you.")
                         print('Replying to ' + pid + ' by ' + pauthor)
@@ -59,51 +59,32 @@ def scanSub():
 
 def deleteNeg():
     
-    print("COMMENT SCORE CHECK CYCLE STARTED")
+    print("\nCOMMENT SCORE CHECK CYCLE STARTED")
     user = r.get_redditor(USERNAME)
-    total = 0
-    upvoted = 0
-    unvoted = 0
-    downvoted = 0
 
     for c in user.get_comments(limit=None):
       
-        if len(str(c.score)) == 4:
-            spaces = ""
-        if len(str(c.score)) == 3:
-            spaces = " "
-        if len(str(c.score)) == 2:
-            spaces = "  "
-        if len(str(c.score)) == 1:
-            spaces = "   "
-      
-        total = total + 1
         if c.score < 1:
                 c.delete()
-                downvoted = downvoted + 1
                 print("Comment Deleted")
-        elif c.score > 10:
-                upvoted = upvoted + 1
-        elif c.score > 1:
-            upvoted = upvoted + 1
-        elif c.score > 0:
-            unvoted = unvoted + 1
+
       
-    print ("")
     print("COMMENT SCORE CHECK CYCLE COMPLETED")
-    urate = round(upvoted / float(total) * 100)
-    nrate = round(unvoted / float(total) * 100)
-    drate = round(downvoted / float(total) * 100)
-    print("Upvoted:      %s\t%s\b\b %%"%(upvoted,urate))
-    print("Unvoted       %s\t%s\b\b %%"%(unvoted,nrate))
-    print("Total:        %s"%total)
+    print("\nComment Karma:\t\t%s"%user.comment_karma)
+
+def unreadMessages():
+    unread = 0
+    for mail in r.get_unread():
+            unread = unread + 1
+            
+    print("Unread Messages:\t" + str(unread) + "\n")
 
 while True:
     try:
         scanSub()
         deleteNeg()
-        print('Running again in ' + WAITS + ' seconds \n')
         sql.commit()
+        unreadMessages()
         time.sleep(WAIT)
     except :
         print('ERROR - Running again in ' + WAITS + ' seconds \n')
